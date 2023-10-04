@@ -1,0 +1,13 @@
+[package]
+name = "gmm"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+default-net = "0.17.0"
+reqwest = { version = "0.11.20", features = ['json'] }
+tokio = { version = "1.0.0", features = ["rt", "rt-multi-thread", "macros"] }
+serde = { version = "1.0", features = ["derive"] }
+gethostname = "0.4.3"
