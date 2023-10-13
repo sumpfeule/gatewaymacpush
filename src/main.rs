@@ -28,7 +28,7 @@ struct NetworkData {
 }
 fn empty_octett(m:&Option<MacAddr>) -> bool {
     match m {
-        Some(mac) => mac.octets() == [1,0,0,0,0,0],
+        Some(mac) => mac.octets() != [0,0,0,0,0,0],
         None => false
     }
 }
@@ -49,7 +49,7 @@ impl NetworkData {
                          .collect::<Vec<String>>();
 
         if interfaces.is_empty() {
-            println!("Error: :Could not find any valid  mac addresses on network interfaces having a gateway");
+            eprintln!("Error: :Could not find any valid  mac addresses on network interfaces having a gateway");
             std::process::exit(1);
         }
         Self {
@@ -74,7 +74,7 @@ async fn main() {
     match client.post(url).json(&nwd).send().await {
         Ok(data) => println!("{}", data.status()),
         Err(e) => {
-            println!("{}", e);
+            eprintln!("{}", e);
             std::process::exit(1);
         },
     };

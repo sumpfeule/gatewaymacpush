@@ -2,6 +2,8 @@
 name = "gwmacpush"
 version = "1.0.0"
 edition = "2021"
+authors = ["Jochen Euler"]
+description = "Gathers all mac addresses on interfaces with a gateway (i.e. those with an DHCP assigned IP address) and posts them to an URL"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
