@@ -1,7 +1,8 @@
-use default_net::{get_default_gateway, interface, Gateway};
+// use default_net::{get_default_gateway, interface, Gateway};
 use serde::Serialize;
 use std::env;
-use std::net::IpAddr;
+use default_net::interface::MacAddr;
+// use std::net::IpAddr;
 
 fn usage() {
     println!(
@@ -22,23 +23,32 @@ fn usage() {
 
 #[derive(Serialize)]
 struct NetworkData {
-    macaddress: String,
-    ipaddress: String,
-    gateway: String,
+    macaddresses: Vec<String>,
     hostname: String,
+}
+fn empty_octett(m:&Option<MacAddr>) -> bool {
+    match m {
+        Some(mac) => mac.octets() != [0,0,0,0,0,0],
+        None => false
+    }
 }
 
 impl NetworkData {
     fn new() -> Self {
-        let gw = get_default_gateway().unwrap_or(Gateway::new());
-        let ip: IpAddr = interface::get_local_ipaddr().unwrap_or(IpAddr::from([0, 0, 0, 0]));
         let hn = gethostname::gethostname()
             .into_string()
             .unwrap_or("Invalid_hostname".to_string());
+
+        let filtered_interfaces = default_net::get_interfaces().into_iter()
+                         .filter(|p| p.gateway.is_some())   // Filter all without gateways
+                         .filter(|p| empty_octett(&p.mac_addr)) // filter all with empty mac addresses
+                         .collect::<Vec< default_net::Interface>>();
+        let interfaces: Vec<String> = filtered_interfaces.into_iter()
+                         .map(|p| p.mac_addr.expect("checked before").address())
+                         .collect::<Vec<String>>();
+
         Self {
-            macaddress: gw.mac_addr.to_string(),
-            ipaddress: ip.to_string(),
-            gateway: gw.ip_addr.to_string(),
+            macaddresses: interfaces,
             hostname: hn,
         }
     }
@@ -47,15 +57,6 @@ impl NetworkData {
 #[tokio::main]
 async fn main() {
     let nwd = NetworkData::new();
-    match get_default_gateway() {
-        Ok(gateway) => {
-            println!("Default Gateway found");
-            println!("{}", gateway.mac_addr.to_string());
-        }
-        Err(e) => {
-            println!("{}", e);
-        }
-    };
 
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
