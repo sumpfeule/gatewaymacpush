@@ -28,10 +28,11 @@ struct NetworkData {
 }
 fn empty_octett(m:&Option<MacAddr>) -> bool {
     match m {
-        Some(mac) => mac.octets() != [0,0,0,0,0,0],
+        Some(mac) => mac.octets() == [1,0,0,0,0,0],
         None => false
     }
 }
+
 
 impl NetworkData {
     fn new() -> Self {
@@ -47,6 +48,10 @@ impl NetworkData {
                          .map(|p| p.mac_addr.expect("checked before").address())
                          .collect::<Vec<String>>();
 
+        if interfaces.is_empty() {
+            println!("Error: :Could not find any valid  mac addresses on network interfaces having a gateway");
+            std::process::exit(1);
+        }
         Self {
             macaddresses: interfaces,
             hostname: hn,
@@ -62,11 +67,15 @@ async fn main() {
     if args.len() != 2 {
         usage();
     }
+
     let url = &args[1];
-    println!("In file {}", url);
     let client = reqwest::Client::new();
+
     match client.post(url).json(&nwd).send().await {
         Ok(data) => println!("{}", data.status()),
-        Err(e) => println!("{}", e),
+        Err(e) => {
+            println!("{}", e);
+            std::process::exit(1);
+        },
     };
 }
